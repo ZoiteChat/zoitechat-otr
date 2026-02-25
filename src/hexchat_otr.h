@@ -15,13 +15,13 @@
  */
 
 #include "config.h"
-#include <hexchat-plugin.h>
+#include <zoitechat-plugin.h>
 #include <gmodule.h>
 
 #define MODULE_NAME "otr"
 
 #define PNAME "OTR"
-#define PDESC "Off-The-Record Messaging for Hexchat"
+#define PDESC "Off-The-Record Messaging for ZoiteChat"
 #define PVERSION PACKAGE_VERSION
 #define OTR_HELP "OTR\n\
     version: Prints version of plugin\n\

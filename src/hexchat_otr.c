@@ -320,7 +320,7 @@ int hexchat_plugin_init (hexchat_plugin *plugin_handle,
 		g_regex_unref (regex_nickignore);
 	regex_nickignore = g_regex_new (IO_DEFAULT_IGNORE, 0, 0, NULL);
 
-	hexchat_print (ph, "Hexchat OTR loaded successfully!\n");
+	hexchat_print (ph, "ZoiteChat OTR loaded successfully!\n");
 
 	return 1;
 }

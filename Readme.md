@@ -1,7 +1,7 @@
-HexChat OTR
+ZoiteChat OTR
 ===========
 
-Adds off-the-record (OTR) support to HexChat.
+Adds off-the-record (OTR) support to ZoiteChat.
 
 Originally forked from irssi-otr and still a work in progress.
 
@@ -13,7 +13,7 @@ Installation
 - glib
 - gcrypt
 - libotr4
-- hexchat
+- zoitechat
 - meson
 
 #### User install
