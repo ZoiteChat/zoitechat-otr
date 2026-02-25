@@ -2,12 +2,12 @@ sources = [
   'otr_key.c',
   'otr_ops.c',
   'otr_util.c',
-  'hexchat_otr.c',
+  'zoitechat_otr.c',
 ]
 
 sources += custom_target('formats',
   input: 'formats.txt',
-  output: ['hexchat-formats.c', 'otr-formats.h'],
+  output: ['zoitechat-formats.c', 'otr-formats.h'],
   command: [find_program('makeformats.py'), '@INPUT@', '@OUTDIR@']
 )
 

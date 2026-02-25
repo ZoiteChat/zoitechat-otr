@@ -47,7 +47,7 @@ struct
 
 static inline const char *get_configdir (void)
 {
-	return hexchat_get_info (ph, "configdir");
+	return zoitechat_get_info (ph, "configdir");
 }
 
 static void keygen_childwatch (GPid pid, gint status, gpointer data)

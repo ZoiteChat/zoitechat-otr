@@ -16,7 +16,7 @@
 #include "otr.h"
 
 int debug = 0;
-hexchat_plugin *ph;
+zoitechat_plugin *ph;
 static GRegex *regex_nickignore = NULL;
 
 static char set_policy[512] = IO_DEFAULT_POLICY;
@@ -26,7 +26,7 @@ static int set_finishonunload = TRUE;
 
 static int get_current_context_type (void)
 {
-	return hexchat_list_int (ph, NULL, "type");
+	return zoitechat_list_int (ph, NULL, "type");
 }
 
 static int extract_nick (char *nick, char *line, size_t nick_size)
@@ -46,25 +46,25 @@ static int extract_nick (char *nick, char *line, size_t nick_size)
 
 void irc_send_message (IRC_CTX *ircctx, const char *recipient, char *msg)
 {
-	hexchat_commandf (ph, "PRIVMSG %s :%s", recipient, msg);
+	zoitechat_commandf (ph, "PRIVMSG %s :%s", recipient, msg);
 }
 
 static void cmd_start (const char *nick)
 {
 	if (get_current_context_type () != 3)
 	{
-		hexchat_print (ph, "OTR: You can only use OTR in a dialog\n");
+		zoitechat_print (ph, "OTR: You can only use OTR in a dialog\n");
 		return;
 	}
 
-	hexchat_commandf (ph, "quote PRIVMSG %s :?OTRv23?", nick);
+	zoitechat_commandf (ph, "quote PRIVMSG %s :?OTRv23?", nick);
 }
 
 static int cmd_otr (char *word[], char *word_eol[], void *userdata)
 {
-	const char *own_nick = hexchat_get_info (ph, "nick");
-	char *target = (char *)hexchat_get_info (ph, "channel");
-	const char *network = hexchat_get_info (ph, "network");
+	const char *own_nick = zoitechat_get_info (ph, "nick");
+	char *target = (char *)zoitechat_get_info (ph, "channel");
+	const char *network = zoitechat_get_info (ph, "network");
 	IRC_CTX ircctxs = {
 				.nick = (char *)own_nick,
 				.address = (char *)network
@@ -75,8 +75,8 @@ static int cmd_otr (char *word[], char *word_eol[], void *userdata)
 
 	if (!cmd)
 	{
-		hexchat_command(ph, "help otr");
-		return HEXCHAT_EAT_ALL;
+		zoitechat_command(ph, "help otr");
+		return ZOITECHAT_EAT_ALL;
 	}
 
 	if (strcmp (cmd, "debug") == 0)
@@ -172,7 +172,7 @@ static int cmd_otr (char *word[], char *word_eol[], void *userdata)
 		}
 		else
 		{
-			hexchat_printf (ph, "policy: %s\n"
+			zoitechat_printf (ph, "policy: %s\n"
 								"policy_known: %s\nignore: %s\n"
 								"finishonunload: %s\n",
 							set_policy, set_policy_known, set_ignore,
@@ -180,16 +180,16 @@ static int cmd_otr (char *word[], char *word_eol[], void *userdata)
 		}
 	}
 	else
-		hexchat_command(ph, "help otr");
+		zoitechat_command(ph, "help otr");
 
-	return HEXCHAT_EAT_ALL;
+	return ZOITECHAT_EAT_ALL;
 }
 
 static int hook_outgoing (char *word[], char *word_eol[], void *userdata)
 {
-	const char *own_nick = hexchat_get_info (ph, "nick");
-	const char *channel = hexchat_get_info (ph, "channel");
-	const char *network = hexchat_get_info (ph, "network");
+	const char *own_nick = zoitechat_get_info (ph, "nick");
+	const char *channel = zoitechat_get_info (ph, "channel");
+	const char *network = zoitechat_get_info (ph, "network");
 	char newmsg[512];
 	char *otrmsg;
 	IRC_CTX ircctx = {
@@ -198,67 +198,67 @@ static int hook_outgoing (char *word[], char *word_eol[], void *userdata)
 	};
 
 	if (get_current_context_type () != 3) /* Not PM */
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 
 	if (g_regex_match (regex_nickignore, channel, 0, NULL))
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 	otrmsg = otr_send (&ircctx, word_eol[1], channel);
 
 	if (otrmsg == word_eol[1])
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 
-	hexchat_emit_print (ph, "Your Message", own_nick, word_eol[1], NULL, NULL);
+	zoitechat_emit_print (ph, "Your Message", own_nick, word_eol[1], NULL, NULL);
 
 	if (!otrmsg)
-		return HEXCHAT_EAT_ALL;
+		return ZOITECHAT_EAT_ALL;
 
 	g_snprintf (newmsg, 511, "PRIVMSG %s :%s", channel, otrmsg);
 
 	otrl_message_free (otrmsg);
-	hexchat_command (ph, newmsg);
+	zoitechat_command (ph, newmsg);
 
-	return HEXCHAT_EAT_ALL;
+	return ZOITECHAT_EAT_ALL;
 }
 
 static int hook_privmsg (char *word[], char *word_eol[], void *userdata)
 {
 	char nick[256];
 	char *newmsg;
-	const char *network = hexchat_get_info (ph, "network");
-	const char *own_nick = hexchat_get_info (ph, "nick");
-	const char *chantypes = hexchat_list_str (ph, NULL, "chantypes");
+	const char *network = zoitechat_get_info (ph, "network");
+	const char *own_nick = zoitechat_get_info (ph, "nick");
+	const char *chantypes = zoitechat_list_str (ph, NULL, "chantypes");
 	IRC_CTX ircctx = {
 		.nick = (char *)own_nick,
 		.address = (char *)network
 	};
-	hexchat_context *query_ctx;
+	zoitechat_context *query_ctx;
 
 	if (strchr (chantypes, word[3][0]) != NULL) /* Ignore channels */
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 
 	if (!extract_nick (nick, word[1], sizeof(nick)))
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 
 	if (g_regex_match (regex_nickignore, nick, 0, NULL))
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 
 	newmsg = otr_receive (&ircctx, word_eol[2], nick);
 
 	if (!newmsg)
 	{
-		return HEXCHAT_EAT_ALL;
+		return ZOITECHAT_EAT_ALL;
 	}
 
 	if (newmsg == word_eol[2])
 	{
-		return HEXCHAT_EAT_NONE;
+		return ZOITECHAT_EAT_NONE;
 	}
 
-	query_ctx = hexchat_find_context (ph, network, nick);
+	query_ctx = zoitechat_find_context (ph, network, nick);
 	if (query_ctx == NULL)
 	{
-		hexchat_commandf (ph, "query %s", nick);
-		query_ctx = hexchat_find_context (ph, network, nick);
+		zoitechat_commandf (ph, "query %s", nick);
+		query_ctx = zoitechat_find_context (ph, network, nick);
 	}
 
 	GRegex *regex_quot = g_regex_new ("&quot;", 0, 0, NULL);
@@ -277,24 +277,24 @@ static int hook_privmsg (char *word[], char *word_eol[], void *userdata)
 	g_regex_unref (regex_gt);
 
 	if (query_ctx)
-		hexchat_set_context (ph, query_ctx);
+		zoitechat_set_context (ph, query_ctx);
 
-	hexchat_emit_print (ph, "Private Message", nick, newmsg, NULL, NULL);
+	zoitechat_emit_print (ph, "Private Message", nick, newmsg, NULL, NULL);
 
-	hexchat_command (ph, "GUI COLOR 2");
+	zoitechat_command (ph, "GUI COLOR 2");
 	otrl_message_free (newmsg);
 
-	return HEXCHAT_EAT_ALL;
+	return ZOITECHAT_EAT_ALL;
 }
 
-void hexchat_plugin_get_info (char **name, char **desc, char **version, void **reserved)
+void zoitechat_plugin_get_info (char **name, char **desc, char **version, void **reserved)
 {
 	*name = PNAME;
 	*desc = PDESC;
 	*version = PVERSION;
 }
 
-int hexchat_plugin_init (hexchat_plugin *plugin_handle,
+int zoitechat_plugin_init (zoitechat_plugin *plugin_handle,
 						 char **plugin_name,
 						 char **plugin_desc,
 						 char **plugin_version,
@@ -309,9 +309,9 @@ int hexchat_plugin_init (hexchat_plugin *plugin_handle,
 	if (otrlib_init ())
 		return 0;
 
-	hexchat_hook_server (ph, "PRIVMSG", HEXCHAT_PRI_NORM, hook_privmsg, 0);
-	hexchat_hook_command (ph, "", HEXCHAT_PRI_NORM, hook_outgoing, 0, 0);
-	hexchat_hook_command (ph, "otr", HEXCHAT_PRI_NORM, cmd_otr, OTR_HELP, 0);
+	zoitechat_hook_server (ph, "PRIVMSG", ZOITECHAT_PRI_NORM, hook_privmsg, 0);
+	zoitechat_hook_command (ph, "", ZOITECHAT_PRI_NORM, hook_outgoing, 0, 0);
+	zoitechat_hook_command (ph, "otr", ZOITECHAT_PRI_NORM, cmd_otr, OTR_HELP, 0);
 
 	otr_setpolicies (IO_DEFAULT_POLICY, FALSE);
 	otr_setpolicies (IO_DEFAULT_POLICY_KNOWN, TRUE);
@@ -320,12 +320,12 @@ int hexchat_plugin_init (hexchat_plugin *plugin_handle,
 		g_regex_unref (regex_nickignore);
 	regex_nickignore = g_regex_new (IO_DEFAULT_IGNORE, 0, 0, NULL);
 
-	hexchat_print (ph, "ZoiteChat OTR loaded successfully!\n");
+	zoitechat_print (ph, "ZoiteChat OTR loaded successfully!\n");
 
 	return 1;
 }
 
-int hexchat_plugin_deinit (void)
+int zoitechat_plugin_deinit (void)
 {
 	g_regex_unref (regex_nickignore);
 
@@ -347,7 +347,7 @@ void printformat (IRC_CTX *ircctx, const char *nick, MessageLevel lvl, int fnum,
 	va_list params;
 	va_start (params, fnum);
 	char msg[LOGMAX], *s = msg;
-	hexchat_context *find_query_ctx;
+	zoitechat_context *find_query_ctx;
 	char *network = NULL;
 
 	if (ircctx)
@@ -355,31 +355,31 @@ void printformat (IRC_CTX *ircctx, const char *nick, MessageLevel lvl, int fnum,
 
 	if (network && nick)
 	{
-		find_query_ctx = hexchat_find_context (ph, network, nick);
+		find_query_ctx = zoitechat_find_context (ph, network, nick);
 		if (find_query_ctx == NULL)
 		{
 			/* no query window yet, let's open one */
-			hexchat_commandf (ph, "query %s", nick);
-			find_query_ctx = hexchat_find_context (ph, network, nick);
+			zoitechat_commandf (ph, "query %s", nick);
+			find_query_ctx = zoitechat_find_context (ph, network, nick);
 		}
 	}
 	else
 	{
-		find_query_ctx = hexchat_find_context (ph,
+		find_query_ctx = zoitechat_find_context (ph,
 											   NULL,
-											   hexchat_get_info (ph,
+											   zoitechat_get_info (ph,
 																 "network")
-												   ?: hexchat_get_info (ph, "network"));
+												   ?: zoitechat_get_info (ph, "network"));
 	}
 
-	hexchat_set_context (ph, find_query_ctx);
+	zoitechat_set_context (ph, find_query_ctx);
 
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 	if (g_vsnprintf (msg, sizeof(msg), formats[fnum].def, params) < 0)
 		g_snprintf (msg, sizeof(msg), "internal error parsing error string (BUG)");
 #pragma GCC diagnostic pop
 	va_end (params);
-	hexchat_printf (ph, "OTR: %s", s);
+	zoitechat_printf (ph, "OTR: %s", s);
 }
 
 IRC_CTX *server_find_address (char *address)

@@ -93,7 +93,7 @@ if get_option('local_install')
   endif
   chat_plugindir = join_paths(ret.stdout().strip(), 'addons')
 else
-  chat_plugindir = chat_dep.get_pkgconfig_variable('hexchatlibdir')
+  chat_plugindir = chat_dep.get_pkgconfig_variable('zoitechatlibdir')
 endif
 message('Install location: ' + chat_plugindir)
 

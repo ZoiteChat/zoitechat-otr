@@ -34,9 +34,9 @@
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
 
-/* hexchat */
+/* zoitechat */
 
-#include "hexchat_otr.h"
+#include "zoitechat_otr.h"
 
 /* log stuff */
 

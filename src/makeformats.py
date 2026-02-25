@@ -43,7 +43,7 @@ lines = map(lambda x: x.strip(),open(sys.argv[1],"r").readlines())
 
 out_dir = sys.argv[2] if len(sys.argv) > 2 else "."
 hdr = open(os.path.join(out_dir, "otr-formats.h"), "w")
-srcx = open(os.path.join(out_dir, "hexchat-formats.c"), "w")
+srcx = open(os.path.join(out_dir, "zoitechat-formats.c"), "w")
 
 srcx.write(GPL_LICENSE)
 hdr.write(GPL_LICENSE)

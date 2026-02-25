@@ -58,15 +58,15 @@ typedef enum
 	MSGLEVEL_MSGS
 } MessageLevel;
 
-extern hexchat_plugin *ph; /* plugin handle */
+extern zoitechat_plugin *ph; /* plugin handle */
 
-G_MODULE_EXPORT int hexchat_plugin_deinit (void);
-G_MODULE_EXPORT int hexchat_plugin_init (hexchat_plugin *plugin_handle,
+G_MODULE_EXPORT int zoitechat_plugin_deinit (void);
+G_MODULE_EXPORT int zoitechat_plugin_init (zoitechat_plugin *plugin_handle,
                                          char **plugin_name,
                                          char **plugin_desc,
                                          char **plugin_version,
                                          char *arg);
-G_MODULE_EXPORT void hexchat_plugin_get_info (char **name, char **desc, char **version, void **reserved);
+G_MODULE_EXPORT void zoitechat_plugin_get_info (char **name, char **desc, char **version, void **reserved);
 void printformat (IRC_CTX *ircctx, const char *nick, MessageLevel lvl, int fnum, ...);
 
 #define otr_noticest(formatnum, ...) \
