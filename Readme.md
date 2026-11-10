@@ -68,6 +68,9 @@ Usage
 3. Start chatting:
 
 	Everything should be secure at this point.
+	`/ME` actions in a private message window are also encrypted when an
+	OTR session is active. If OTR cannot encrypt an outgoing action, the
+	plugin will warn you that the message is being sent unencrypted.
 	When you are done:
 
 	```
