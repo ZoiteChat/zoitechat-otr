@@ -47,6 +47,7 @@ send_failed	send failed: msg=%s
 send_change	couldn't find context, also OTR changed the outgoing message(BUG?)
 send_fragment	failed to fragment message: msg=%s
 send_converted	OTR converted sent message to %s
+me_unencrypted	/ME message to %s will be sent UNENCRYPTED (no active OTR session)
 receive_ignore_query	ignoring rest of OTR default query msg
 receive_dequeued	dequeued msg of length %d
 receive_queued	queued msg of length %d

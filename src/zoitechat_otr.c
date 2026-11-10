@@ -192,6 +192,8 @@ static int hook_outgoing (char *word[], char *word_eol[], void *userdata)
 	const char *network = zoitechat_get_info (ph, "network");
 	char newmsg[512];
 	char *otrmsg;
+	char *msg;
+	gboolean is_action = GPOINTER_TO_INT (userdata) == 1;
 	IRC_CTX ircctx = {
 		.nick = (char *)own_nick,
 		.address = (char *)network
@@ -202,12 +204,41 @@ static int hook_outgoing (char *word[], char *word_eol[], void *userdata)
 
 	if (g_regex_match (regex_nickignore, channel, 0, NULL))
 		return ZOITECHAT_EAT_NONE;
-	otrmsg = otr_send (&ircctx, word_eol[1], channel);
 
-	if (otrmsg == word_eol[1])
+	/* /ME without text: let the client deal with it. */
+	if (is_action && !*word_eol[2])
 		return ZOITECHAT_EAT_NONE;
 
-	zoitechat_emit_print (ph, "Your Message", own_nick, word_eol[1], NULL, NULL);
+	/* /ME is just a private message carrying an ACTION payload, so wrap it
+	 * in ACTION delimiters to keep the semantics once it is decrypted.
+	 * For commands word_eol[1] also contains the command name, while the
+	 * text is in word_eol[2] (as used by the /ME command itself). */
+	if (is_action)
+		msg = g_strdup_printf ("\x01" "ACTION %s\x01", word_eol[2]);
+	else
+		msg = word_eol[1];
+
+	otrmsg = otr_send (&ircctx, msg, channel);
+
+	if (otrmsg == msg)
+	{
+		/* OTR will not encrypt this message: let the client send it in
+		 * the clear, but warn so an action is not silently leaked. */
+		if (is_action)
+		{
+			otr_notice (&ircctx, channel, TXT_ME_UNENCRYPTED, channel);
+			g_free (msg);
+		}
+		return ZOITECHAT_EAT_NONE;
+	}
+
+	if (is_action)
+	{
+		zoitechat_emit_print (ph, "Your Action", own_nick, word_eol[2], NULL, NULL);
+		g_free (msg);
+	}
+	else
+		zoitechat_emit_print (ph, "Your Message", own_nick, word_eol[1], NULL, NULL);
 
 	if (!otrmsg)
 		return ZOITECHAT_EAT_ALL;
@@ -279,7 +310,22 @@ static int hook_privmsg (char *word[], char *word_eol[], void *userdata)
 	if (query_ctx)
 		zoitechat_set_context (ph, query_ctx);
 
-	zoitechat_emit_print (ph, "Private Message", nick, newmsg, NULL, NULL);
+	/* An OTR-encrypted /ME arrives decrypted as "\001ACTION text\001";
+	 * present it as an action event rather than a regular message. */
+	gboolean is_action = FALSE;
+	const char *display = newmsg;
+	if (newmsg[0] == '\x01' &&
+		g_ascii_strncasecmp (newmsg + 1, "ACTION ", 7) == 0)
+	{
+		size_t len = strlen (newmsg);
+		if (len > 2 && newmsg[len - 1] == '\x01')
+			newmsg[len - 1] = '\0';
+		display = newmsg + 8;
+		is_action = TRUE;
+	}
+
+	zoitechat_emit_print (ph, is_action ? "Private Action" : "Private Message",
+						  nick, display, NULL, NULL);
 
 	zoitechat_command (ph, "GUI COLOR 2");
 	otrl_message_free (newmsg);
@@ -310,7 +356,8 @@ int zoitechat_plugin_init (zoitechat_plugin *plugin_handle,
 		return 0;
 
 	zoitechat_hook_server (ph, "PRIVMSG", ZOITECHAT_PRI_NORM, hook_privmsg, 0);
-	zoitechat_hook_command (ph, "", ZOITECHAT_PRI_NORM, hook_outgoing, 0, 0);
+	zoitechat_hook_command (ph, "", ZOITECHAT_PRI_NORM, hook_outgoing, 0, NULL);
+	zoitechat_hook_command (ph, "ME", ZOITECHAT_PRI_NORM, hook_outgoing, 0, GINT_TO_POINTER (1));
 	zoitechat_hook_command (ph, "otr", ZOITECHAT_PRI_NORM, cmd_otr, OTR_HELP, 0);
 
 	otr_setpolicies (IO_DEFAULT_POLICY, FALSE);
